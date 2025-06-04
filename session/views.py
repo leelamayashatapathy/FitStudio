@@ -38,6 +38,56 @@ class SessionCreateView(APIView):
             'data': serializer.errors
             }, status=status.HTTP_400_BAD_REQUEST)
         
+class SessionUpdateView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def put(self, request, session_id):
+        user = request.user
+        try:
+            session = Session.objects.get(id=session_id)
+        except Session.DoesNotExist:
+            return Response({"msg": "Session not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        if user.role != 'instructor' or session.instructor != user:
+            return Response({"msg": "Permission denied"}, status=status.HTTP_403_FORBIDDEN)
+
+        data = request.data.copy()
+        data['instructor'] = user.id 
+
+        serializer = SessionSerializer(session, data=data, partial=True)
+        if serializer.is_valid():
+            if user.role != 'instructor':
+                return Response({"msg": "Permission denied"}, status=status.HTTP_403_FORBIDDEN)
+            session = serializer.save()
+            return Response({
+                'status': True,
+                'msg': 'Session Updated Successfully',
+                'data': SessionSerializer(session).data
+            }, status=status.HTTP_200_OK)
+
+        return Response({
+            'status': False,
+            'msg': 'Session update failed',
+            'data': serializer.errors
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+
+class SessionDeleteView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def delete(self, request, session_id):
+        user = request.user
+        try:
+            session = Session.objects.get(id=session_id)
+        except Session.DoesNotExist:
+            return Response({"msg": "Session not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        if user.role != 'instructor' or session.instructor != user:
+            return Response({"msg": "Permission denied"}, status=status.HTTP_403_FORBIDDEN)
+
+        session.delete()
+        return Response({"msg": "Session deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
+        
         
 class SessionInstructorView(generics.ListAPIView):
     serializer_class = SessionSerializer
