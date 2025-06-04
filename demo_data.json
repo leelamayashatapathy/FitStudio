@@ -1,0 +1,40 @@
+{
+  "client_registration": {
+    "email": "testing@client.com",
+    "name": "Testing Client",
+    "role": "client",
+    "password1": "Client@123",
+    "password2": "Cliet@123"
+  },
+
+
+  "instructor_registration": {
+    "email": "testing@instructor.com",
+    "name": "Testing Instructor",
+    "role": "instructor",
+    "password1": "Instructor@123",
+    "password2": "Instructor@123"
+  },
+
+
+  "session_creation": {
+    "title": "Evening Zumba Blast",
+    "category": "Zumba",
+    "description": "High-energy Zumba session to burn calories.",
+    "date": "2025-06-10",
+    "time_slots": [
+      {
+        "start_time": "18:30 PM",
+        "end_time": "19:30 PM",
+        "capacity": 20
+      },
+      {
+        "start_time": "19:30 PM",
+        "end_time": "20:30 PM",
+        "capacity": 25
+      }
+    ]
+  }
+}
+
+
