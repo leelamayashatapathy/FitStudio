@@ -4,6 +4,8 @@ from django.db.models import F
 from rest_framework import status, permissions,generics
 from .models import Session, TimeSlot, Booking
 from .serializers import SessionSerializer, TimeSlotSerializer, BookingSerializer
+from django.utils import timezone
+from .utils import format_user_time, convert_time_to_user_timezone,get_user_timezone
 
 
 
@@ -14,9 +16,10 @@ class SessionCreateView(APIView):
         data = request.data
         user = request.user
         data['instructor'] = user.id
-        serializer = SessionSerializer(data=request.data)
         
-        print(request.user.id)
+        # user_timezone = data.get("user_timezone", "UTC")
+        serializer = SessionSerializer(data=data)
+        
         if serializer.is_valid():
             if user.role != 'instructor':
                 return Response({
@@ -66,34 +69,43 @@ class SessionDetailInstructorView(APIView):
     def get(self, request, session_id):
         try:
             session = Session.objects.get(id=session_id)
-
             if request.user.role != 'instructor' or session.instructor != request.user:
-                return Response(
-                    {"msg": "no permission"},
-                    status=status.HTTP_403_FORBIDDEN
-                )
+                return Response({"msg": "Permission denied."}, status=status.HTTP_403_FORBIDDEN)
+
+            user_tz = get_user_timezone(request)  
 
             session_data = SessionSerializer(session).data
+
             time_slots = session.time_slots.all()
-            time_slots_data = TimeSlotSerializer(time_slots, many=True).data
+            slot_data = []
             bookings = []
+
             for slot in time_slots:
+                start_t= convert_time_to_user_timezone(session.date, slot.start_time, user_tz)
+                end_t = convert_time_to_user_timezone(session.date, slot.end_time, user_tz)
+
+                slot_data.append({
+                    "slot_id": slot.id,
+                    "start_time": format_user_time(start_t),
+                    "end_time": format_user_time(end_t),
+                    "capacity": slot.capacity,
+                    "booked_count": slot.booked_count
+                })
+
                 for booking in slot.bookings.all():
                     bookings.append({
                         "slot_id": slot.id,
                         "client": booking.client.email,
-                        "booking_time": booking.created_at
+                        "booking_time": booking.created_at  
                     })
 
-            session_data['time_slots'] = time_slots_data
+            session_data['time_slots'] = slot_data
             session_data['bookings'] = bookings
 
             return Response(session_data, status=status.HTTP_200_OK)
 
         except Session.DoesNotExist:
             return Response({"msg": "Session not found."}, status=status.HTTP_404_NOT_FOUND)
-        except Exception as e:
-            return Response({"msg": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
         
 class SessionDetailPublicView(APIView):
@@ -101,7 +113,9 @@ class SessionDetailPublicView(APIView):
 
     def get(self, request, session_id):
         try:
-            session = Session.objects.get(id=session_id)
+            user_tz = get_user_timezone(request)
+            session = Session.objects.get(id=session_id, date__gte=timezone.now().date())
+            session = Session.objects.get(id=session_id, date__gte=timezone.now().date())
             session_data = {
                 "id": session.id,
                 "title": session.title,
@@ -113,23 +127,23 @@ class SessionDetailPublicView(APIView):
 
 
             available_slots = session.time_slots.filter(booked_count__lt=F('capacity'))
-            slot_info = [
+            slot_data = [
                 {
                     "slot_id": slot.id,
-                    "start_time": slot.start_time,
-                    "end_time": slot.end_time,
+                    "start_time": convert_time_to_user_timezone(slot.start_time, user_tz),
+                    "end_time": convert_time_to_user_timezone(slot.end_time, user_tz),
                     "available_seats": slot.capacity - slot.booked_count,
                 }
                 for slot in available_slots
             ]
-            session_data['available_time_slots'] = slot_info
+            session_data['available_time_slots'] = slot_data
 
             return Response(session_data, status=status.HTTP_200_OK)
 
         except Session.DoesNotExist:
-            return Response({"error": "Session not found."}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"msg": "Session not found."}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response({"msg": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         
         
