@@ -38,6 +38,20 @@ class SessionSerializer(serializers.ModelSerializer):
         for slot_data in time_slots_data:
             TimeSlot.objects.create(session=session, **slot_data)
         return session
+    
+    def update(self, instance, validated_data):
+        time_slots_data = validated_data.pop('time_slots', None)
+
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+
+        if time_slots_data is not None:
+            instance.time_slots.all().delete()
+            for slot_data in time_slots_data:
+                TimeSlot.objects.create(session=instance, **slot_data)
+
+        return instance
 
 class BookingSerializer(serializers.ModelSerializer):
     class Meta:

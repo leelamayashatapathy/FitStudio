@@ -56,9 +56,9 @@ cd fitness-studio
 
 2. Create a Virtual Environment & Activate It
 python -m venv venv
-# On Windows:
+**On Windows:**
 venv\Scripts\activate
-# On macOS/Linux:
+**On macOS/Linux:**
 source venv/bin/activate
 
 3. Install Dependencies
