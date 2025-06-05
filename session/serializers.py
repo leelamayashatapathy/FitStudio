@@ -12,14 +12,21 @@ class CustomTimeField(serializers.TimeField):
             except ValueError:
                 self.fail("invalid_time_format")
         return super().to_internal_value(value)
+    
+    
+class SessondataforBookingSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Session
+        fields = "__all__"   
 class TimeSlotSerializer(serializers.ModelSerializer):
     start_time = CustomTimeField()
     end_time = CustomTimeField()
     is_full = serializers.SerializerMethodField()
+    session = SessondataforBookingSerializer(read_only = True)
 
     class Meta:
         model = TimeSlot
-        fields = ['id', 'start_time', 'end_time', 'capacity', 'booked_count', 'is_full']
+        fields = ['id', 'start_time', 'end_time', 'capacity', 'booked_count', 'is_full', 'session']
         
 
     def get_is_full(self, obj):
@@ -54,9 +61,10 @@ class SessionSerializer(serializers.ModelSerializer):
         return instance
 
 class BookingSerializer(serializers.ModelSerializer):
+    timeslot_detail = TimeSlotSerializer(source = 'timeslot', read_only = True)
     class Meta:
         model = Booking
-        fields = ['id', 'timeslot', 'client']
+        fields = ['id', 'timeslot', 'client', 'timeslot_detail']
 
     def validate(self, data):
     

@@ -64,5 +64,5 @@ class SimpleFlowTests(APITestCase):
 
         booking_url = "/api/client/book/session/"
         booking_resp = self.client.post(booking_url, {"timeslot": timeslot_id, "session": session_id}, format='json', **client_auth)
-        # print("Booking response:", booking_resp.status_code, booking_resp.data)
+        print("Booking response:", booking_resp.status_code, booking_resp.data)
         self.assertEqual(booking_resp.status_code, status.HTTP_201_CREATED)

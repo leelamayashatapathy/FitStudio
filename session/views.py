@@ -123,6 +123,7 @@ class SessionDetailInstructorView(APIView):
                 return Response({"msg": "Permission denied."}, status=status.HTTP_403_FORBIDDEN)
 
             user_tz = get_user_timezone(request)  
+            print(user_tz)
 
             session_data = SessionSerializer(session).data
 
@@ -180,8 +181,8 @@ class SessionDetailPublicView(APIView):
             slot_data = [
                 {
                     "slot_id": slot.id,
-                    "start_time": convert_time_to_user_timezone(slot.start_time, user_tz),
-                    "end_time": convert_time_to_user_timezone(slot.end_time, user_tz),
+                    "start_time": convert_time_to_user_timezone(session.date,slot.start_time, user_tz),
+                    "end_time": convert_time_to_user_timezone(session.date,slot.end_time, user_tz),
                     "available_seats": slot.capacity - slot.booked_count,
                 }
                 for slot in available_slots
