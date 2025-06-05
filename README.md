@@ -92,6 +92,9 @@ POST: http://127.0.0.1:8000/api/refresh-token/ - Get new access token by passing
 
 POST http://127.0.0.1:8000/api/sessions/create/ – Create a session (Instructor only)
 -> Get the access token and paste it in Api's header Key: Authorization and value as: Bearer accesstoken 
+PUT http://127.0.0.1:8000/api/sessions/19/update/ - Update the session(Only instructor)
+
+DEL http://127.0.0.1:8000/api/sessions/19/delete/ - Delete the session (Only Instructor)
 
 GET http://127.0.0.1:8000/api/public/sessions/ - All Upcoming session (Public)
 
@@ -105,4 +108,14 @@ GET http://127.0.0.1:8000/api/public/sessions/{id}/ – Public session
 demodata.json - This file includes All the demodata for testing
 
 
+**Run Test**
+python manage.py test session
+
+**Improvements**
+
+-> Add celery to background task automation like (Email notification before 1 hr of the session)
+-> Implementing cache
+-> Logout, Reset pw
+
+**Thank you for visiting**
 
